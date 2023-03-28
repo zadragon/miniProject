@@ -110,6 +110,50 @@
             $("#temp").text(temp);
           });
       }
+      function save_comment() {
+        let comment = $("#comment").val();
+
+        let formData = new FormData();
+
+        formData.append("comment_give", comment);
+
+        fetch("/articleAdd", { method: "POST", body: formData })
+          .then((res) => res.json())
+          .then((data) => {
+            alert(data["msg"]);
+            window.location.reload();
+          });
+      }
+      function show_comment() {
+        fetch("/articleAdd")
+          .then((res) => res.json())
+          .then((data) => {
+            let rows = data["result"];
+            $("#comment-list").empty();
+            rows.forEach((a) => {
+              let comment = a["comment"];
+              let temp_html = `<div class="card">
+                                <div class="card-text">
+                                  <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
+                                  <span class="card-date"><small class="text-muted">작성날짜</small></span>
+                                </div>
+                                <img
+                                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHHYXvVL5wUoqmjOZzfT_9LOoujaoggZ_KcQ&usqp=CAU"
+                                  class="card-img-top"
+                                  alt="..."
+                                />
+                                <div class="card-body">
+                                  <p class="card-ment">${comment}</p>
+                                </div>   
+                                <div class="card-btn">
+          <button type="button" class="btn btn-danger">수정하기</button>
+          <button type="button" class="btn btn-danger">삭제하기</button>
+        </div>                             
+                              </div>`;
+              $("#comment-list").append(temp_html);
+            });
+          });
+      }
     </script>
   </head>
   <body>
