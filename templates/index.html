@@ -100,6 +100,7 @@
 				margin: 15px auto 15px;
 				flex-direction: row;
 			}
+
 			.user-nick {
 				font-size: 20px;
 				font-weight: bold;
@@ -114,6 +115,63 @@
 			}
 		</style>
 		<script>
+			$(document).ready(function () {
+				set_temp();
+				show_comment();
+			});
+			function set_temp() {
+				fetch("http://spartacodingclub.shop/sparta_api/weather/seoul")
+					.then((res) => res.json())
+					.then((data) => {
+						let temp = data["temp"];
+						$("#temp").text(temp);
+					});
+			}
+			function save_comment() {
+				let comment = $("#comment").val();
+
+				let formData = new FormData();
+
+				formData.append("comment_give", comment);
+
+				fetch("/articleAdd", { method: "POST", body: formData })
+					.then((res) => res.json())
+					.then((data) => {
+						alert(data["msg"]);
+						window.location.reload();
+					});
+			}
+			function show_comment() {
+				fetch("/articleAdd")
+					.then((res) => res.json())
+					.then((data) => {
+						let rows = data["result"];
+						$("#comment-list").empty();
+						rows.forEach((a) => {
+							let comment = a["comment"];
+							let temp_html = `<div class="card">
+                                <div class="card-text">
+                                  <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
+                                  <span class="card-date"><small class="text-muted">작성날짜</small></span>
+                                </div>
+                                <img
+                                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHHYXvVL5wUoqmjOZzfT_9LOoujaoggZ_KcQ&usqp=CAU"
+                                  class="card-img-top"
+                                  alt="..."
+                                />
+                                <div class="card-body">
+                                  <p class="card-ment">${comment}</p>
+                                </div>   
+                                <div class="card-btn">
+          <button type="button" class="btn btn-danger">수정하기</button>
+          <button type="button" class="btn btn-danger">삭제하기</button>
+        </div>                             
+                              </div>`;
+							$("#comment-list").append(temp_html);
+						});
+					});
+			}
+
 			function logout() {
 				$.removeCookie("mytoken");
 				alert("로그아웃!");
@@ -124,7 +182,7 @@
 	<body>
 		<div class="mypic">
 			<h1>봄맞이 꽃밭 콘테스트</h1>
-			<p class="temp-box">현재기온: <span id="temp">36</span>도</p>
+			<p class="temp-box">현재기온: <span id="temp">0</span>도</p>
 			<p class="user-comment"><span class="user-nick">{{nickname}}</span>님 환영합니다. <br />당신의 꽃 사진을 기록해 보세요.</p>
 			<button class="btn-logout btn btn-danger" onclick="logout()">로그아웃</button>
 		</div>
@@ -154,7 +212,6 @@
 				<div class="card-body">
 					<p class="card-ment">꽃 사진 설명</p>
 				</div>
-
 				<div class="card-btn">
 					<button type="button" class="btn btn-danger">수정하기</button>
 					<button type="button" class="btn btn-danger">삭제하기</button>

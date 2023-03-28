@@ -89,15 +89,23 @@ def api_register():
    return jsonify({'result': 'success'})
     
 
-@app.route("/guestbook", methods=["POST"])
-def guestbook_post():
-   
-    
-    return jsonify({'msg': '저장 완료!'})
+@app.route("/articleAdd", methods=["POST"])
+def articleAdd_post():
+    comment_receive = request.form['comment_give']
 
-@app.route("/guestbook", methods=["GET"])
-def guestbook_get():
-    return jsonify({'msg': '로드 완료!'})
+    
+    
+    doc = {
+        'comment':comment_receive
+    }
+    db.flower.insert_one(doc)
+
+    return jsonify({'msg': '저장완료!'})
+
+@app.route("/articleAdd", methods=["GET"])
+def articleAdd_get():
+    all_comments = list(db.flower.find({},{'_id':False}))
+    return jsonify({'result': all_comments})
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5001, debug=True)
