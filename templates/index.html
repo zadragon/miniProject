@@ -207,6 +207,31 @@
 						window.location.reload();
 					});
 			}
+
+			function modifySetting(comment_id) {
+				fetch("/articleOneGet?comment_id=" + comment_id)
+					.then((res) => res.json())
+					.then((data) => {
+						let comment_data = data["result"];
+						$("#exampleModal").attr("comment-id", comment_id);
+						$("#modify_text").val(comment_data[0].comment);
+					});
+			}
+
+			function modifyPost() {
+				let commentId = $("#exampleModal").attr("comment-id");
+				let modifyText = $("#modify_text").val();
+				let formData = new FormData();
+				formData.append("commentId_give", commentId);
+				formData.append("comment_give", modifyText);
+
+				fetch("/articleModify", { method: "PUT", body: formData })
+					.then((res) => res.json())
+					.then((data) => {
+						alert(data["msg"]);
+						window.location.reload();
+					});
+			}
 		</script>
 	</head>
 	<body>
@@ -264,6 +289,34 @@
 				<div class="card-btn">
 					<button type="button" class="btn btn-danger">수정하기</button>
 					<button type="button" class="btn btn-danger">삭제하기</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal -->
+		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5" id="exampleModalLabel">수정</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form>
+							<div class="mb-3">
+								<label for="modify_text" class="col-form-label">수정내용:</label>
+								<textarea class="form-control" id="modify_text"></textarea>
+							</div>
+							<div class="mb-3">
+								<label for="formFileSm" class="form-label">이미지 파일 등록</label>
+								<input class="form-control form-control-sm" id="formFileSm" type="file" />
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						<button type="button" class="btn btn-primary" onclick="modifyPost()">수정 등록</button>
+					</div>
 				</div>
 			</div>
 		</div>

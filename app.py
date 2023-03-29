@@ -135,5 +135,26 @@ def articleDelete():
 
     return jsonify({"msg": "todo 삭제 완료!"})
 
+@app.route("/articleModify", methods=["PUT"])
+def articleModify():
+    token_receive = request.cookies.get('mytoken')    
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+    
+    comment_receive = request.form['comment_give']
+    comment_id_receive = request.form['commentId_give']
+    doc = {'comment':comment_receive}
+    db.flower.update_one({'comment_id':comment_id_receive,'user_id':payload['id']},{'$set':doc})
+    
+    return jsonify({'msg': '수정 완료!'})
+
+@app.route("/articleOneGet", methods=["GET"])
+def articleOneGet():
+    token_receive = request.cookies.get('mytoken')    
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+
+    comment_id = request.args.get('comment_id')
+    comment = list(db.flower.find({'comment_id':comment_id,'user_id':payload['id']},{'_id':False}))
+    return jsonify({'result': comment})
+
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5001, debug=True)
