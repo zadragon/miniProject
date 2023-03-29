@@ -27,7 +27,10 @@
 
     <title>꽃밭</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300;400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
       * {
         font-family: "Noto Serif KR", serif;
@@ -36,7 +39,11 @@
         width: 100%;
         height: 300px;
 
-        background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        background-image: linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.5),
+            rgba(0, 0, 0, 0.5)
+          ),
           url("https://gongu.copyright.or.kr/gongu/wrt/cmmn/wrtFileImageView.do?wrtSn=11288689&filePath=L2Rpc2sxL25ld2RhdGEvMjAxNS8wMi9DTFM2OS9OVVJJXzAwMV8wMTc1X251cmltZWRpYV8yMDE1MTIwMw==&thumbAt=Y&thumbSe=b_tbumb&wrtTy=10006");
         background-position: center 30%;
         background-size: cover;
@@ -127,14 +134,16 @@
       function save_comment() {
         let comment = $("#comment").val();
         let imgFile = $("#formFileSm")[0].files[0];
+        console.log(imgFile);
         let formData = new FormData();
-
+        //난수생성
         function generateRandomCode(n) {
           let str = "";
           for (let i = 0; i < n; i++) {
             str += Math.floor(Math.random() * 10);
           }
           return str;
+
         }
 
         formData.append("comment_give", comment);
@@ -155,30 +164,33 @@
             let rows = data["result"];
             let user_id = data["user_id"];
             $("#comment-list").empty();
+
             rows.forEach((a) => {
               let comment = a["comment"];
               let comment_id = a["comment_id"];
               let commentUser_id = a["user_id"];
               let commentUser_img = a["img"];
               let temp_html = `<div class="card" comment-id=${comment_id}>
-                                      <div class="card-text">
-                                        <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
-                                        <span class="card-date"><small class="text-muted">작성날짜</small></span>
-                                      </div>
-                                      <img
-                                        src='static/${commentUser_img}'
-                                        class="card-img-top"
-                                        alt="..."
-                                      />
-                                      <div class="card-body">
-                                        <p class="card-ment">${comment}</p>
-                                      </div>   
-                      
-                                      <div class="card-btn" style="display:${commentUser_id == user_id ? "block" : "none"}">
-            <button type="button" class="btn btn-danger" id="myModal" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="modifySetting(${comment_id})">수정하기</button>
-            <button type="button" class="btn btn-danger">삭제하기</button>
-            </div>                             
-                                    </div>`;
+                                <div class="card-text">
+                                  <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
+                                  <span class="card-date"><small class="text-muted">작성날짜</small></span>
+                                </div>
+                                <img
+                                  src='static/${commentUser_img}'
+                                  class="card-img-top"
+                                  alt="..."
+                                />
+                                <div class="card-body">
+                                  <p class="card-ment">${comment}</p>
+                                </div>   
+								
+                                <div class="card-btn" style="display:${
+                                  commentUser_id == user_id ? "block" : "none"
+                                }">
+			<button type="button" class="btn btn-danger" id="myModal" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="modifySetting(${comment_id})">수정하기</button>
+			<button type="button" class="btn btn-danger">삭제하기</button>
+			</div>                             
+                              </div>`;
               $("#comment-list").append(temp_html);
             });
           });
@@ -189,32 +201,79 @@
         alert("로그아웃!");
         window.location.href = "/login";
       }
+
+      function modifySetting(comment_id) {
+        fetch("/articleOneGet?comment_id=" + comment_id)
+          .then((res) => res.json())
+          .then((data) => {
+            let comment_data = data["result"];
+            $("#exampleModal").attr("comment-id", comment_id);
+            $("#modify_text").val(comment_data[0].comment);
+          });
+      }
+
+      function modifyPost() {
+        let commentId = $("#exampleModal").attr("comment-id");
+        let modifyText = $("#modify_text").val();
+        let formData = new FormData();
+        formData.append("commentId_give", commentId);
+        formData.append("comment_give", modifyText);
+
+        fetch("/articleModify", { method: "PUT", body: formData })
+          .then((res) => res.json())
+          .then((data) => {
+            alert(data["msg"]);
+            window.location.reload();
+          });
+      }
     </script>
   </head>
   <body>
     <div class="mypic">
       <h1>봄맞이 꽃밭 콘테스트</h1>
       <p class="temp-box">현재기온: <span id="temp">0</span>도</p>
-      <p class="user-comment"><span class="user-nick">{{nickname}}</span>님 환영합니다. <br />당신의 꽃 사진을 기록해 보세요.</p>
-      <button class="btn-logout btn btn-danger" onclick="logout()">로그아웃</button>
+      <p class="user-comment">
+        <span class="user-nick">{{nickname}}</span>님 환영합니다. <br />당신의
+        꽃 사진을 기록해 보세요.
+      </p>
+      <button class="btn-logout btn btn-danger" onclick="logout()">
+        로그아웃
+      </button>
     </div>
     <div class="mypost">
-      <p class="user-name"><small class="text-muted">유저네임(사용자ID)</small></p>
+      <p class="user-name">
+        <small class="text-muted">유저네임(사용자ID)</small>
+      </p>
       <div class="form-floating">
-        <textarea class="form-control" placeholder="Leave a comment here" id="comment" style="height: 100px"></textarea>
+        <textarea
+          class="form-control"
+          placeholder="Leave a comment here"
+          id="comment"
+          style="height: 100px"
+        ></textarea>
         <label for="floatingTextarea2">멘트 남기기</label>
       </div>
       <div class="mb-3">
         <label for="formFileSm" class="form-label">이미지 파일 등록</label>
-        <input class="form-control form-control-sm" id="formFileSm" type="file" />
+        <input
+          class="form-control form-control-sm"
+          id="formFileSm"
+          type="file"
+        />
       </div>
-      <button onclick="save_comment()" type="button" class="btn btn-danger">기록하기</button>
+      <button onclick="save_comment()" type="button" class="btn btn-danger">
+        기록하기
+      </button>
     </div>
     <div class="mycards" id="comment-list">
       <div class="card mb-3">
         <div class="card-text">
-          <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
-          <span class="card-date"><small class="text-muted">작성날짜</small></span>
+          <span class="user-name"
+            ><small class="text-muted">유저네임(사용자ID)</small></span
+          >
+          <span class="card-date"
+            ><small class="text-muted">작성날짜</small></span
+          >
         </div>
         <img
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHHYXvVL5wUoqmjOZzfT_9LOoujaoggZ_KcQ&usqp=CAU"
@@ -231,8 +290,12 @@
       </div>
       <div class="card">
         <div class="card-text">
-          <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
-          <span class="card-date"><small class="text-muted">작성날짜</small></span>
+          <span class="user-name"
+            ><small class="text-muted">유저네임(사용자ID)</small></span
+          >
+          <span class="card-date"
+            ><small class="text-muted">작성날짜</small></span
+          >
         </div>
         <img
           src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHHYXvVL5wUoqmjOZzfT_9LOoujaoggZ_KcQ&usqp=CAU"
@@ -246,6 +309,65 @@
         <div class="card-btn">
           <button type="button" class="btn btn-danger">수정하기</button>
           <button type="button" class="btn btn-danger">삭제하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">수정</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="modify_text" class="col-form-label"
+                  >수정내용:</label
+                >
+                <textarea class="form-control" id="modify_text"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="formFileSm" class="form-label"
+                  >이미지 파일 등록</label
+                >
+                <input
+                  class="form-control form-control-sm"
+                  id="formFileSm"
+                  type="file"
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              닫기
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="modifyPost()"
+            >
+              수정 등록
+            </button>
+          </div>
         </div>
       </div>
     </div>

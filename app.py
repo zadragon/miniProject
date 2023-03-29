@@ -50,7 +50,7 @@ def api_login():
    
    # id, 암호화된pw을 가지고 해당 유저를 찾습니다.
    result = db.user.find_one({'id': id_receive, 'pw': pw_hash})
-
+   
    if result is not None:
         # JWT 토큰에는, payload와 시크릿키가 필요합니다.
         # 시크릿키가 있어야 토큰을 디코딩(=풀기) 해서 payload 값을 볼 수 있습니다.
@@ -58,7 +58,7 @@ def api_login():
         # exp에는 만료시간을 넣어줍니다. 만료시간이 지나면, 시크릿키로 토큰을 풀 때 만료되었다고 에러가 납니다.
         payload = {
             'id': id_receive,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=4444)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
@@ -78,9 +78,6 @@ def api_register():
    id_receive = request.form['id_give']
    pw_receive = request.form['pw_give']
    nickname_receive = request.form['nickname_give']
-   print(id_receive)
-   print(pw_receive)
-   print(nickname_receive)
 
    pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest()
 
@@ -95,6 +92,7 @@ def articleAdd_post():
     commentId_receive = request.form['comment_id']
     commentfile_receive = request.files['comment_image']
 
+
     extension = commentfile_receive.filename.split('.')[-1]
     today = datetime.datetime.now()
     mytime = today.strftime('%Y-%m-%d-%H-%M-%S')
@@ -104,7 +102,7 @@ def articleAdd_post():
 
     token_receive = request.cookies.get('mytoken')    
     payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-    
+
     doc = {
         'comment':comment_receive,
         'comment_id':commentId_receive,        
@@ -119,10 +117,30 @@ def articleAdd_post():
 def articleAdd_get():
     token_receive = request.cookies.get('mytoken')    
     payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-    print(payload)
+    
     all_comments = list(db.flower.find({},{'_id':False}))
     return jsonify({'result': all_comments,'user_id':payload['id']})
+
+@app.route("/articleOneGet", methods=["GET"])
+def articleOneGet():
+    token_receive = request.cookies.get('mytoken')    
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+
+    comment_id = request.args.get('comment_id')
+    comment = list(db.flower.find({'comment_id':comment_id,'user_id':payload['id']},{'_id':False}))
+    return jsonify({'result': comment})
+
+@app.route("/articleModify", methods=["PUT"])
+def articleModify():
+    token_receive = request.cookies.get('mytoken')    
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
     
+    comment_receive = request.form['comment_give']
+    comment_id_receive = request.form['commentId_give']
+    doc = {'comment':comment_receive}
+    db.flower.update_one({'comment_id':comment_id_receive,'user_id':payload['id']},{'$set':doc})
+    
+    return jsonify({'msg': '수정 완료!'})
 
 if __name__ == '__main__':
-   app.run('0.0.0.0', port=5001, debug=True)
+   app.run('0.0.0.0', port=5000, debug=True)
