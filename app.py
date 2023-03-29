@@ -92,11 +92,24 @@ def api_register():
 @app.route("/articleAdd", methods=["POST"])
 def articleAdd_post():
     comment_receive = request.form['comment_give']
+    commentId_receive = request.form['comment_id']
+    commentfile_receive = request.files['comment_image']
 
-    
+    extension = commentfile_receive.filename.split('.')[-1]
+    today = datetime.datetime.now()
+    mytime = today.strftime('%Y-%m-%d-%H-%M-%S')
+    filename = f'img-{mytime}'
+    save_to = f'static/{filename}.{extension}'
+    commentfile_receive.save(save_to)
+
+    token_receive = request.cookies.get('mytoken')    
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
     
     doc = {
-        'comment':comment_receive
+        'comment':comment_receive,
+        'comment_id':commentId_receive,        
+        'user_id':payload['id'],
+        'img':f'{filename}.{extension}'
     }
     db.flower.insert_one(doc)
 
@@ -104,8 +117,12 @@ def articleAdd_post():
 
 @app.route("/articleAdd", methods=["GET"])
 def articleAdd_get():
+    token_receive = request.cookies.get('mytoken')    
+    payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+    print(payload)
     all_comments = list(db.flower.find({},{'_id':False}))
-    return jsonify({'result': all_comments})
+    return jsonify({'result': all_comments,'user_id':payload['id']})
+    
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5001, debug=True)
