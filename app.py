@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 app = Flask(__name__)
 from pymongo import MongoClient
+from bson.objectid import ObjectId
+from bson.json_util import dumps
+
 import certifi
 
 ca = certifi.where()
@@ -119,10 +122,18 @@ def articleAdd_post():
 def articleAdd_get():
     token_receive = request.cookies.get('mytoken')    
     payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-    print(payload)
-    all_comments = list(db.flower.find({},{'_id':False}))
-    return jsonify({'result': all_comments,'user_id':payload['id']})
-    
+    all_comments = list(db.flower.find({}))
+    return jsonify({'result': dumps(all_comments),'user_id':payload['id']})
+
+@app.route("/articleDelete", methods=["DELETE"])
+def articleDelete():
+   #  objId_receive = request.form["commentObj_id"]
+    commentId_receive = request.form["comment_id"]
+
+   #  db.flower.delete_one({"_id": ObjectId(objId_receive)})
+    db.flower.delete_one({"comment_id": commentId_receive })
+
+    return jsonify({"msg": "todo 삭제 완료!"})
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5001, debug=True)
