@@ -165,7 +165,6 @@
 					alert("사진을 첨부해주세요.");
 					return;
 				}
-				console.log(imgFile);
 
 				fetch("/articleAdd", { method: "POST", body: formData })
 					.then((res) => res.json())
