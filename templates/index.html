@@ -140,9 +140,32 @@
 					return str;
 				}
 
+				//날짜 구하기
+				let today = new Date();
+				let year = today.getFullYear();
+				let month = ("0" + (today.getMonth() + 1)).slice(-2);
+				let day = ("0" + today.getDate()).slice(-2);
+				let dateString = year + "-" + month + "-" + day;
+
+				//시간구하기
+				let hours = ("0" + today.getHours()).slice(-2);
+				let minutes = ("0" + today.getMinutes()).slice(-2);
+				let seconds = ("0" + today.getSeconds()).slice(-2);
+				let timeString = hours + ":" + minutes + ":" + seconds;
+
 				formData.append("comment_give", comment);
 				formData.append("comment_id", generateRandomCode(10));
 				formData.append("comment_image", imgFile);
+				formData.append("comment_date", dateString + " " + timeString);
+
+				if ($("#comment").val() == "") {
+					alert("멘트를 남겨주세요.");
+					return;
+				} else if ($("#formFileSm")[0].files[0] == undefined) {
+					alert("사진을 첨부해주세요.");
+					return;
+				}
+				console.log(imgFile);
 
 				fetch("/articleAdd", { method: "POST", body: formData })
 					.then((res) => res.json())
@@ -152,7 +175,7 @@
 					});
 			}
 			function show_comment() {
-				fetch("/articleAdd")
+				fetch("/articleList")
 					.then((res) => res.json())
 					.then((data) => {
 						let rows = JSON.parse(data["result"]);
@@ -165,27 +188,33 @@
 							let commentUser_id = a["user_id"];
 							let commentUser_img = a["img"];
 							let commentObj_id = a["_id"]["$oid"];
-							let temp_html = `<div class="card" comment-id=${commentObj_id}>
-			                                   <div class="card-text">
-			                                     <span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
-			                                     <span class="card-date"><small class="text-muted">작성날짜</small></span>
-			                                   </div>
-			                                   <img
-			                                     src='static/${commentUser_img}'
-			                                     class="card-img-top"
-			                                     alt="..."
-			                                   />
-			                                   <div class="card-body">
-			                                     <p class="card-ment">${comment}</p>
-			                                   </div>
+							let commentDate = a["comment_date"];
 
-			                                   <div class="card-btn" style="display:${commentUser_id == user_id ? "block" : "none"}">
-			         <button type="button" class="btn btn-danger" id="myModal" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="modifySetting(${comment_id})">수정하기</button>
-			         <button type="button" class="btn btn-danger" onclick="articleDel(${comment_id})">삭제하기</button>
+							document.querySelector("#comment-list").insertAdjacentHTML(
+								"afterbegin",
+								`
+                                <div class="card" comment-id=${commentObj_id}>
+									<div class="card-text">
+										<span class="user-name"><small class="text-muted">${commentUser_id}</small></span>
+										<span class="card-date"><small class="text-muted">${commentDate}</small></span>
+									</div>
+									<img
+										src='static/${commentUser_img}'
+										class="card-img-top"
+										alt="..."
+									/>
+									<div class="card-body">
+										<p class="card-ment">${comment}</p>
+									</div>
 
-			         </div>
-			                                 </div>`;
-							$("#comment-list").append(temp_html);
+									<div class="card-btn" style="display:${commentUser_id == user_id ? "block" : "none"}">
+										<button type="button" class="btn btn-danger" id="myModal" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="modifySetting('${comment_id}')">수정하기</button>
+										<button type="button" class="btn btn-danger" onclick="articleDel('${commentObj_id}')">삭제하기</button>
+
+									</div>
+			                    </div>
+                                `
+							);
 						});
 					});
 			}
@@ -196,10 +225,10 @@
 				window.location.href = "/login";
 			}
 
-			function articleDel(comment_id) {
-				console.log(comment_id);
+			function articleDel(commentObj_id) {
+				console.log(commentObj_id);
 				let formData = new FormData();
-				formData.append("comment_id", comment_id);
+				formData.append("commentObj_id", commentObj_id);
 				fetch("/articleDelete", { method: "DELETE", body: formData })
 					.then((response) => response.json())
 					.then((data) => {
@@ -242,7 +271,9 @@
 			<button class="btn-logout btn btn-danger" onclick="logout()">로그아웃</button>
 		</div>
 		<div class="mypost">
-			<p class="user-name"><small class="text-muted">유저네임(사용자ID)</small></p>
+			<p class="user-name">
+				<small class="text-muted"><b>{{nickname}}</b> 님 게시물을 남겨보세요.</small>
+			</p>
 			<div class="form-floating">
 				<textarea class="form-control" placeholder="Leave a comment here" id="comment" style="height: 100px"></textarea>
 				<label for="floatingTextarea2">멘트 남기기</label>
@@ -253,45 +284,7 @@
 			</div>
 			<button onclick="save_comment()" type="button" class="btn btn-danger">기록하기</button>
 		</div>
-		<div class="mycards" id="comment-list">
-			<div class="card mb-3">
-				<div class="card-text">
-					<span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
-					<span class="card-date"><small class="text-muted">작성날짜</small></span>
-				</div>
-				<img
-					src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHHYXvVL5wUoqmjOZzfT_9LOoujaoggZ_KcQ&usqp=CAU"
-					class="card-img-top"
-					alt="..."
-				/>
-				<div class="card-body">
-					<p class="card-ment">꽃 사진 설명</p>
-				</div>
-				<div class="card-btn">
-					<button type="button" class="btn btn-danger">수정하기</button>
-					<button type="button" class="btn btn-danger">삭제하기</button>
-				</div>
-			</div>
-			<div class="card">
-				<div class="card-text">
-					<span class="user-name"><small class="text-muted">유저네임(사용자ID)</small></span>
-					<span class="card-date"><small class="text-muted">작성날짜</small></span>
-				</div>
-				<img
-					src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHHYXvVL5wUoqmjOZzfT_9LOoujaoggZ_KcQ&usqp=CAU"
-					class="card-img-top"
-					alt="..."
-				/>
-				<div class="card-body">
-					<p class="card-ment">꽃 사진 설명</p>
-				</div>
-
-				<div class="card-btn">
-					<button type="button" class="btn btn-danger">수정하기</button>
-					<button type="button" class="btn btn-danger">삭제하기</button>
-				</div>
-			</div>
-		</div>
+		<div class="mycards" id="comment-list"><p>로딩 중..</p></div>
 
 		<!-- Modal -->
 		<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -307,7 +300,7 @@
 								<label for="modify_text" class="col-form-label">수정내용:</label>
 								<textarea class="form-control" id="modify_text"></textarea>
 							</div>
-							<div class="mb-3">
+							<div class="mb-3" style="display: none">
 								<label for="formFileSm" class="form-label">이미지 파일 등록</label>
 								<input class="form-control form-control-sm" id="formFileSm" type="file" />
 							</div>

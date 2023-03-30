@@ -61,7 +61,7 @@ def api_login():
         # exp에는 만료시간을 넣어줍니다. 만료시간이 지나면, 시크릿키로 토큰을 풀 때 만료되었다고 에러가 납니다.
         payload = {
             'id': id_receive,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
 
@@ -97,6 +97,7 @@ def articleAdd_post():
     comment_receive = request.form['comment_give']
     commentId_receive = request.form['comment_id']
     commentfile_receive = request.files['comment_image']
+    commentDate_receive = request.form['comment_date']
 
     extension = commentfile_receive.filename.split('.')[-1]
     today = datetime.datetime.now()
@@ -112,14 +113,15 @@ def articleAdd_post():
         'comment':comment_receive,
         'comment_id':commentId_receive,        
         'user_id':payload['id'],
-        'img':f'{filename}.{extension}'
+        'img':f'{filename}.{extension}',
+        'comment_date':commentDate_receive
     }
     db.flower.insert_one(doc)
 
     return jsonify({'msg': '저장완료!'})
 
-@app.route("/articleAdd", methods=["GET"])
-def articleAdd_get():
+@app.route("/articleList", methods=["GET"])
+def articleList_get():
     token_receive = request.cookies.get('mytoken')    
     payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
     all_comments = list(db.flower.find({}))
@@ -127,13 +129,11 @@ def articleAdd_get():
 
 @app.route("/articleDelete", methods=["DELETE"])
 def articleDelete():
-   #  objId_receive = request.form["commentObj_id"]
-    commentId_receive = request.form["comment_id"]
+    objId_receive = request.form["commentObj_id"]
+    db.flower.delete_one({"_id": ObjectId(objId_receive)})
 
-   #  db.flower.delete_one({"_id": ObjectId(objId_receive)})
-    db.flower.delete_one({"comment_id": commentId_receive })
+    return jsonify({"msg": "삭제 완료!"})
 
-    return jsonify({"msg": "todo 삭제 완료!"})
 
 @app.route("/articleModify", methods=["PUT"])
 def articleModify():
